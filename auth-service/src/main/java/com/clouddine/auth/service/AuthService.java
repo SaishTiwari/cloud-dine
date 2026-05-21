@@ -8,6 +8,9 @@ import com.clouddine.auth.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import com.clouddine.auth.security.JwtService;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import com.clouddine.auth.dto.LoginRequest;
 
 @Service
 @RequiredArgsConstructor
@@ -15,6 +18,7 @@ public class AuthService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final JwtService jwtService;
 
     public AuthResponse register(RegisterRequest request) {
 
@@ -34,5 +38,18 @@ public class AuthService {
         userRepository.save(user);
 
         return new AuthResponse("User registered successfully", user.getEmail());
+    }
+
+
+    public String login(String email, String password) {
+
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        if (!passwordEncoder.matches(password, user.getPassword())) {
+            throw new RuntimeException("Invalid credentials");
+        }
+
+        return jwtService.generateToken(user.getEmail(), user.getRole().name());
     }
 }

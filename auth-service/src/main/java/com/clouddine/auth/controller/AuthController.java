@@ -1,6 +1,7 @@
 package com.clouddine.auth.controller;
 
 import com.clouddine.auth.dto.AuthResponse;
+import com.clouddine.auth.dto.LoginRequest;
 import com.clouddine.auth.dto.RegisterRequest;
 import com.clouddine.auth.service.AuthService;
 import jakarta.validation.Valid;
@@ -21,4 +22,10 @@ public class AuthController {
     ) {
         return ResponseEntity.ok(authService.register(request));
     }
+
+    @PostMapping("/login")
+    public ResponseEntity<String> login(@RequestBody LoginRequest request) {
+        return ResponseEntity.ok(authService.login(request.getEmail(), request.getPassword()));
+    }
+
 }
