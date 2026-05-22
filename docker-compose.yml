@@ -1,0 +1,81 @@
+version: "3.8"
+
+services:
+
+  # --------------------
+  # POSTGRES DB
+  # --------------------
+  postgres:
+    image: postgres:15
+    container_name: postgres-db
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    ports:
+      - "5432:5432"
+    networks:
+      - cloudnet
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  # --------------------
+  # AUTH SERVICE
+  # --------------------
+  auth-service:
+    build: ./auth-service
+    container_name: auth-service
+    ports:
+      - "8081:8081"
+    depends_on:
+      - postgres
+    environment:
+      SPRING_DATASOURCE_URL: ${SPRING_DATASOURCE_URL}
+      SPRING_DATASOURCE_USERNAME: ${SPRING_DATASOURCE_USERNAME}
+      SPRING_DATASOURCE_PASSWORD: ${SPRING_DATASOURCE_PASSWORD}
+    networks:
+      - cloudnet
+
+  # --------------------
+  # MENU SERVICE
+  # --------------------
+  menu-service:
+    build: ./menu-service
+    container_name: menu-service
+    ports:
+      - "8082:8082"
+    depends_on:
+      - postgres
+    environment:
+      SPRING_DATASOURCE_URL: ${SPRING_DATASOURCE_URL}
+      SPRING_DATASOURCE_USERNAME: ${SPRING_DATASOURCE_USERNAME}
+      SPRING_DATASOURCE_PASSWORD: ${SPRING_DATASOURCE_PASSWORD}
+    networks:
+      - cloudnet
+
+  # --------------------
+  # API GATEWAY
+  # --------------------
+  api-gateway:
+    build: ./api-gateway
+    container_name: api-gateway
+    ports:
+      - "8080:8080"
+    depends_on:
+      - auth-service
+      - menu-service
+    networks:
+      - cloudnet
+
+# --------------------
+# NETWORK
+# --------------------
+networks:
+  cloudnet:
+    driver: bridge
+
+# --------------------
+# VOLUME (DATABASE PERSISTENCE)
+# --------------------
+volumes:
+  postgres_data:
