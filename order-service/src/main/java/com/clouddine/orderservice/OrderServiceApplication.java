@@ -1,4 +1,4 @@
-package com.clouddine.order;
+package com.clouddine.orderservice;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
