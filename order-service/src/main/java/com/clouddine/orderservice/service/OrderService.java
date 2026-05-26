@@ -8,11 +8,13 @@ import java.util.UUID;
 
 public interface OrderService {
 
-    OrderResponse createOrder(UUID userId, CreateOrderRequest request);
-
-    List<OrderResponse> getUserOrders(UUID userId);
+    OrderResponse createOrder(CreateOrderRequest request);
 
     OrderResponse getOrderById(UUID orderId);
 
-    OrderResponse cancelOrder(UUID orderId, UUID userId);
+    List<OrderResponse> getOrdersByUser(UUID userId);
+
+    OrderResponse updateOrderStatus(UUID orderId, String status);
+
+    void deleteOrder(UUID orderId);
 }

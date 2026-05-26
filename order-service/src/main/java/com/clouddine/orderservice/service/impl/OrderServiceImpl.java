@@ -7,60 +7,63 @@ import com.clouddine.orderservice.dto.response.OrderResponse;
 import com.clouddine.orderservice.entity.Order;
 import com.clouddine.orderservice.entity.OrderItem;
 import com.clouddine.orderservice.entity.OrderStatus;
+import com.clouddine.orderservice.exception.ResourceNotFoundException;
 import com.clouddine.orderservice.repository.OrderRepository;
 import com.clouddine.orderservice.service.OrderService;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
 
+
 @Service
 @RequiredArgsConstructor
-@Slf4j
 public class OrderServiceImpl implements OrderService {
 
     private final OrderRepository orderRepository;
 
+    // ---------------- CREATE ORDER ----------------
     @Override
-    public OrderResponse createOrder(UUID userId, CreateOrderRequest request) {
-
-        log.info("Creating order for user: {}", userId);
-
-        BigDecimal totalAmount = request.getItems()
-                .stream()
-                .map(item ->
-                        item.getPrice()
-                                .multiply(BigDecimal.valueOf(item.getQuantity()))
-                )
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
+    public OrderResponse createOrder(CreateOrderRequest request) {
 
         Order order = Order.builder()
-                .userId(userId)
+                .userId(request.getUserId())
                 .status(OrderStatus.PENDING)
-                .totalAmount(totalAmount)
                 .build();
 
-        List<OrderItem> orderItems = request.getItems()
+        List<OrderItem> items = request.getItems()
                 .stream()
-                .map(itemRequest -> mapToOrderItem(itemRequest, order))
+                .map(item -> mapToOrderItem(item, order))
                 .toList();
 
-        order.setItems(orderItems);
+        order.getItems().addAll(items);
 
-        Order savedOrder = orderRepository.save(order);
+        BigDecimal total = items.stream()
+                .map(i -> i.getPrice().multiply(BigDecimal.valueOf(i.getQuantity())))
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
 
-        log.info("Order created successfully with ID: {}", savedOrder.getId());
+        order.setTotalAmount(total);
 
-        return mapToOrderResponse(savedOrder);
+        Order saved = orderRepository.save(order);
+
+        return mapToOrderResponse(saved);
     }
 
+    // ---------------- GET BY ID ----------------
     @Override
-    public List<OrderResponse> getUserOrders(UUID userId) {
+    public OrderResponse getOrderById(UUID orderId) {
 
-        log.info("Fetching orders for user: {}", userId);
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new ResourceNotFoundException("Order not found: " + orderId));
+
+        return mapToOrderResponse(order);
+    }
+
+    // ---------------- GET BY USER ----------------
+    @Override
+    public List<OrderResponse> getOrdersByUser(UUID userId) {
 
         return orderRepository.findByUserId(userId)
                 .stream()
@@ -68,41 +71,33 @@ public class OrderServiceImpl implements OrderService {
                 .toList();
     }
 
+    // ---------------- UPDATE STATUS ----------------
     @Override
-    public OrderResponse getOrderById(UUID orderId) {
+    public OrderResponse updateOrderStatus(UUID orderId, String status) {
 
         Order order = orderRepository.findById(orderId)
-                .orElseThrow(() ->
-                        new RuntimeException("Order not found")
-                );
+                .orElseThrow(() -> new ResourceNotFoundException("Order not found: " + orderId));
 
-        return mapToOrderResponse(order);
+        order.setStatus(OrderStatus.valueOf(status.toUpperCase()));
+
+        Order updated = orderRepository.save(order);
+
+        return mapToOrderResponse(updated);
     }
 
+    // ---------------- DELETE ORDER ----------------
     @Override
-    public OrderResponse cancelOrder(UUID orderId, UUID userId) {
+    public void deleteOrder(UUID orderId) {
 
         Order order = orderRepository.findById(orderId)
-                .orElseThrow(() ->
-                        new RuntimeException("Order not found")
-                );
+                .orElseThrow(() -> new ResourceNotFoundException("Order not found: " + orderId));
 
-        if (!order.getUserId().equals(userId)) {
-            throw new RuntimeException("Unauthorized");
-        }
-
-        if (order.getStatus() == OrderStatus.DELIVERED) {
-            throw new RuntimeException("Delivered orders cannot be cancelled");
-        }
-
-        order.setStatus(OrderStatus.CANCELLED);
-
-        Order updatedOrder = orderRepository.save(order);
-
-        log.info("Order cancelled: {}", updatedOrder.getId());
-
-        return mapToOrderResponse(updatedOrder);
+        orderRepository.delete(order);
     }
+
+    // =====================================================
+    // MAPPERS
+    // =====================================================
 
     private OrderItem mapToOrderItem(OrderItemRequest request, Order order) {
 
@@ -116,12 +111,12 @@ public class OrderServiceImpl implements OrderService {
 
     private OrderResponse mapToOrderResponse(Order order) {
 
-        List<OrderItemResponse> itemResponses = order.getItems()
+        List<OrderItemResponse> items = order.getItems()
                 .stream()
-                .map(item -> OrderItemResponse.builder()
-                        .menuItemId(item.getMenuItemId())
-                        .quantity(item.getQuantity())
-                        .price(item.getPrice())
+                .map(i -> OrderItemResponse.builder()
+                        .menuItemId(i.getMenuItemId())
+                        .quantity(i.getQuantity())
+                        .price(i.getPrice())
                         .build())
                 .toList();
 
@@ -132,7 +127,7 @@ public class OrderServiceImpl implements OrderService {
                 .totalAmount(order.getTotalAmount())
                 .createdAt(order.getCreatedAt())
                 .updatedAt(order.getUpdatedAt())
-                .items(itemResponses)
+                .items(items)
                 .build();
     }
 }

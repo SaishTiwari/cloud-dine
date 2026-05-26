@@ -1,21 +1,18 @@
 package com.clouddine.orderservice.dto.request;
 
-import jakarta.validation.Valid;
-import jakarta.validation.constraints.NotEmpty;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.util.List;
+import java.util.UUID;
 
-@Data
-@Builder
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
+@Builder
 public class CreateOrderRequest {
 
-    @NotEmpty(message = "Order items cannot be empty")
-    @Valid
+    private UUID userId;
+
     private List<OrderItemRequest> items;
 }

@@ -1,31 +1,31 @@
 package com.clouddine.orderservice.dto.response;
 
 import com.clouddine.orderservice.entity.OrderStatus;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
-@Data
-@Builder
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
+@Builder
 public class OrderResponse {
 
     private UUID orderId;
 
-    private String customerEmail;
-
-    private BigDecimal totalAmount;
+    private UUID userId;
 
     private OrderStatus status;
 
+    private BigDecimal totalAmount;
+
     private LocalDateTime createdAt;
+
+    private LocalDateTime updatedAt;
 
     private List<OrderItemResponse> items;
 }
