@@ -59,7 +59,7 @@ services:
       - cloudnet
 
   # --------------------
-  # ORDER SERVICE (ADD THIS NOW)
+  # ORDER SERVICE
   # --------------------
   order-service:
     build: ./order-service

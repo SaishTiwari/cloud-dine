@@ -10,6 +10,16 @@ spring:
       server:
         webflux:
           routes:
+
+            # AUTH SERVICE
+            - id: auth-service
+              uri: http://auth-service:8081
+              predicates:
+                - Path=/api/auth/**
+              filters:
+                - StripPrefix=1
+
+            # MENU SERVICE
             - id: menu-service
               uri: http://menu-service:8082
               predicates:
@@ -17,9 +27,10 @@ spring:
               filters:
                 - StripPrefix=1
 
-            - id: auth-service
-              uri: http://auth-service:8081
+            # ORDER SERVICE
+            - id: order-service
+              uri: http://order-service:8083
               predicates:
-                - Path=/api/auth/**
+                - Path=/api/orders/**
               filters:
                 - StripPrefix=1
