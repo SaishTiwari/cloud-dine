@@ -34,3 +34,7 @@ spring:
                 - Path=/api/orders/**
               filters:
                 - StripPrefix=1
+
+
+  jwt:
+    secret: ${JWT_SECRET}
