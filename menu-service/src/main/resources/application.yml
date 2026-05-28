@@ -25,3 +25,12 @@ server:
 jwt:
   secret: my-super-secret-key-change-this-in-production
   expiration: 86400000
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      show-details: always
