@@ -1,2 +1,20 @@
+# Environment files
 .env
+
+# Kubernetes secrets
 k8s/secrets/
+
+# IntelliJ
+.idea/
+
+# Mac
+.DS_Store
+
+# Logs
+*.log
+
+# Maven
+target/
+
+# Kubernetes temp files
+*.tmp
